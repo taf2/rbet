@@ -57,7 +57,7 @@ module ET
   #   basic_list.delete!
   #   => nil
   #
-  class List
+  class List < Client
 
     def self.create( name, options = {} )
     end

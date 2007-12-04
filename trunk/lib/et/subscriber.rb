@@ -49,7 +49,7 @@ module ET
   #   subscriber.remove(list)
   #   => ET::Subscriber
   #
-  class Subscriber
+  class Subscriber < Client
 
     # desc:
     #   creates a new Subscriber object
