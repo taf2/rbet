@@ -5,7 +5,14 @@ class SubscriberClient  < Test::Unit::TestCase
 
   def test_subscriber_load
     client = ET::Subscriber.new('http://127.0.0.1:99999/test/','tester','tester11', :use_ssl => false)
-    client.load!('foo@bar.com')
+    client.load!('jdoe@email.com')
+    assert_equal 'jdoe@email.com', client.attrs['Email Address']
+    assert_equal 'John', client.attrs['First Name']
+    assert_equal 'Doe', client.attrs['Last Name']
+    assert_equal "", client.attrs['Title']
+    assert_equal nil, client.attrs['Not Event Defined']
+    assert_equal 'jdoe@email.com', client.email
+    assert_equal 'Active', client.status
   end
 
 end

@@ -21,23 +21,18 @@ end
 
 # list for subscriber requests and respond like ET would
 class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
+  include ET::Renderable
+
   def do_POST(req, res)
+    set_template_path( File.join(File.dirname(__FILE__), "templates") )
+
     xml_body = String.new(req.body)
     xml_body.gsub!(/qf=xml&xml=/,'')
     doc = Hpricot.XML(xml_body)
-    action = doc.at(:system).at(:action).inner_html
+    system_name = doc.at(:system).at(:system_name).inner_html.strip.downcase
+    action = doc.at(:system).at(:action).inner_html.strip.downcase
 
-    response = case action
-    when /retrieve/
-    when /edit/
-    when /add/
-    when /Ping/
-      %q(<system>
-        <diagnostics>
-          <Ping>Running</Ping>
-        </diagnostics>
-      </system>)
-    end
+    response = render_template("#{system_name}_#{action}_success")
 
     res.body = %Q(<?xml version="1.0" ?>
 <exacttarget>

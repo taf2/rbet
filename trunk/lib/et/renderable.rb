@@ -20,7 +20,20 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-require 'et/renderable'
-require 'et/client'
-require 'et/subscriber'
-require 'et/list'
+module ET
+  module Renderable
+    def set_template_path(path)
+      @template_path = path
+    end
+
+    def template_path(name)
+      File.join( (@template_path || File.dirname(__FILE__)), "#{name}.rxml")
+    end
+
+    def render_template( name )
+      erb = ERB.new( File.open( template_path(name) ,"r").read, 0, "<>")
+      erb.result( binding )
+    end
+
+  end
+end
