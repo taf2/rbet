@@ -62,6 +62,7 @@ module ET
     end
 
     def load!(email)
+      @email = email
       response = send do|io|
         io << render_template('subscriber_retrieve')
       end
