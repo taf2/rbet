@@ -50,21 +50,15 @@ module ET
   #   => ET::Subscriber
   #
   class Subscriber < Client
-
-    # desc:
-    #   creates a new Subscriber object
-    # params:
-    #   email_addr: the address of the user to create
-    def initialize(email_addr)
+    
+    def initialize(service_url,username,password,options={})
+      super
     end
 
-    # desc:
-    #   get an existing subscriber
-    # params:
-    #   email: the address of the user to retrieve
-    # returns:
-    #   an existing subscriber from the ET system
-    def self.retrieve(email_addr)
+    def load!(email)
+      send do|io|
+        io << render_template('subscriber_retrieve')
+      end
     end
 
     # desc:

@@ -1,8 +1,11 @@
 require 'test/unit'
 $:.unshift File.join(File.dirname(__FILE__), "..", "lib")
-require 'et/client'
+require 'et'
 require 'webrick'
 require 'thread'
+require 'rubygems'
+gem 'hpricot'
+require 'hpricot'
 
 # shut up, webrick :-)
 class ::WEBrick::HTTPServer
@@ -16,15 +19,29 @@ class ::WEBrick::BasicLog
   end
 end
 
-class PingETService < ::WEBrick::HTTPServlet::AbstractServlet
+# list for subscriber requests and respond like ET would
+class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
   def do_POST(req, res)
-    res.body = %q(<?xml version="1.0" ?>
+    xml_body = String.new(req.body)
+    xml_body.gsub!(/qf=xml&xml=/,'')
+    doc = Hpricot.XML(xml_body)
+    action = doc.at(:system).at(:action).inner_html
+
+    response = case action
+    when /retrieve/
+    when /edit/
+    when /add/
+    when /Ping/
+      %q(<system>
+        <diagnostics>
+          <Ping>Running</Ping>
+        </diagnostics>
+      </system>)
+    end
+
+    res.body = %Q(<?xml version="1.0" ?>
 <exacttarget>
-  <system>
-    <diagnostics>
-      <Ping>Running</Ping>
-    </diagnostics>
-  </system>
+#{response}
 </exacttarget>)
 
     res['Content-Type'] = "text/xml"
@@ -35,13 +52,12 @@ module ET
   module TestCase
 
     def setup
-
       # create the server
       @server = WEBrick::HTTPServer.new( :Port => 99999 )
 
-      # use the test url
-      @server.mount("/test/", PingETService)
-      
+      # setup test server (simulates exact target)
+      @server.mount("/test/", SubscriberETService)
+ 
       # start up the server in a background thread
       @thread = Thread.new(@server) do|server|
         server.start
@@ -49,7 +65,8 @@ module ET
     end
 
     def teardown
-      @server.stop
+      @server.shutdown
+      #@thread.join
     end
 
   end
