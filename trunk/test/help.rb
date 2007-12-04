@@ -19,12 +19,36 @@ class ::WEBrick::BasicLog
   end
 end
 
+class ETService
+  include ET::Renderable
+  def initialize
+    set_template_path( File.join(File.dirname(__FILE__), "templates") )
+  end
+end
+
+class DiagnosticsService < ETService
+  def ping(*values)
+    render_template("diagnostics_ping_success")
+  end
+end
+
+class SubscriberService < ETService
+
+  def retrieve(*values)
+    if values.is_a?(Array)
+      render_template("subscriber_retrieve_failed")
+    else
+      @email = values[1]
+      render_template("subscriber_retrieve_success")
+    end
+  end
+
+end
+
 # list for subscriber requests and respond like ET would
 class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
-  include ET::Renderable
 
   def do_POST(req, res)
-    set_template_path( File.join(File.dirname(__FILE__), "templates") )
 
     xml_body = String.new(req.body)
     xml_body.gsub!(/qf=xml&xml=/,'')
@@ -32,7 +56,7 @@ class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
     system_name = doc.at(:system).at(:system_name).inner_html.strip.downcase
     action = doc.at(:system).at(:action).inner_html.strip.downcase
 
-    response = render_template("#{system_name}_#{action}_success")
+    response = service_for(system_name).send(action)
 
     res.body = %Q(<?xml version="1.0" ?>
 <exacttarget>
@@ -41,6 +65,12 @@ class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
 
     res['Content-Type'] = "text/xml"
   end
+
+private
+  def service_for(system_name)
+    eval("#{system_name.capitalize}Service.new")  #render_template("#{system_name}_#{action}_success")
+  end
+
 end
 
 module ET

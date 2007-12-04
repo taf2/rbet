@@ -3,7 +3,7 @@
     <subid>125704849</subid>
     <listid>63718</listid>
     <list_name>Newsletter List</list_name>
-    <Email__Address>jdoe@email.com</Email__Address>
+    <Email__Address><%= @email %></Email__Address>
     <Status>Active</Status>
     <Email__Type>HTML</Email__Type>
     <First__Name>John</First__Name>
