@@ -19,7 +19,10 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
+
+require 'rubygems'
+require 'hpricot'
+
 module ET
 
   #
@@ -50,14 +53,37 @@ module ET
   #   => ET::Subscriber
   #
   class Subscriber < Client
-    
+    attr_accessor :attrs
+    attr_reader :email, :status
+ 
     def initialize(service_url,username,password,options={})
       super
+      @attrs = {}
     end
 
     def load!(email)
-      send do|io|
+      response = send do|io|
         io << render_template('subscriber_retrieve')
+      end
+      if response.class != Net::HTTPOK
+        # error?
+      else
+        doc = Hpricot.XML(response.body)
+        subscriber = doc.at(:subscriber)
+        # load elements into the attrs hash
+        @attrs = {}
+        subscriber.each_child do|attr_element|
+          if attr_element.elem?
+            name = attr_element.name.gsub(/__/,' ')
+            value = attr_element.inner_html
+            @attrs[name] = value
+            if name == 'Email Address'
+              @email = value
+            elsif name == 'Status'
+              @status = value
+            end
+          end
+        end
       end
     end
 

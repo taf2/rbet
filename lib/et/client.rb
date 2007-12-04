@@ -27,6 +27,7 @@ require 'erb'
 module ET
   class Client
     attr_reader :username, :password, :headers
+    include ET::Renderable
 
     def initialize(service_url,username,password,options={})
       @username = username
@@ -51,15 +52,6 @@ module ET
       result = 'qf=xml&xml=' + render_template( 'auth' )
 
       @url.post( @uri.path, result, @headers.merge('Content-length' => result.length.to_s) )
-    end
-
-    def template_path(name)
-      File.join(File.dirname(__FILE__),"#{name}.rxml")
-    end
-
-    def render_template( name )
-			erb = ERB.new( File.open( template_path(name) ,"r").read, 0, "<>")
-      erb.result( binding )
     end
 
   end
