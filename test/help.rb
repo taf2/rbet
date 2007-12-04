@@ -36,10 +36,10 @@ class SubscriberService < ETService
 
   def retrieve(*values)
     if values.is_a?(Array)
-      render_template("subscriber_retrieve_failed")
-    else
       @email = values[1]
       render_template("subscriber_retrieve_success")
+    else
+      render_template("subscriber_retrieve_failed")
     end
   end
 
@@ -53,10 +53,14 @@ class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
     xml_body = String.new(req.body)
     xml_body.gsub!(/qf=xml&xml=/,'')
     doc = Hpricot.XML(xml_body)
-    system_name = doc.at(:system).at(:system_name).inner_html.strip.downcase
-    action = doc.at(:system).at(:action).inner_html.strip.downcase
+    system = doc.at(:system)
+    system_name = system.at(:system_name).inner_html.strip.downcase
+    action = system.at(:action).inner_html.strip.downcase
+ 
+    sv1 = system.at(:search_value).inner_html.strip unless system.at(:search_value).nil?
+    sv2 = system.at(:search_value2).inner_html.strip unless system.at(:search_value2).nil?
 
-    response = service_for(system_name).send(action)
+    response = service_for(system_name).send(action, sv1, sv2)
 
     res.body = %Q(<?xml version="1.0" ?>
 <exacttarget>

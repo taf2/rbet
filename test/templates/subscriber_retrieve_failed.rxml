@@ -3,7 +3,7 @@
 <system>
   <subscriber>
     <error>1</error>
-    <error_description>Subscriber not found with ListID =  Email Address = </error_description>
+    <error_description>Subscriber not found with ListID = <%= @listid %> Email Address = <%= @email %></error_description>
   </subscriber>
 </system>
 </exacttarget>
