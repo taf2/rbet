@@ -28,12 +28,13 @@ module ET
   class Client
     attr_reader :username, :password, :headers
 
-    def initialize(service_url,username,password)
+    def initialize(service_url,username,password,options={})
       @username = username
       @password = password
       @uri = URI.parse(service_url)
       @url = Net::HTTP.new(@uri.host, @uri.port)
-      @url.set_debug_output $stderr
+      @url.use_ssl = options.key?(:use_ssl) ? options[:use_ssl] : true
+      @url.set_debug_output options.key?(:debug_output) ? options[:debug_output] : nil
       @headers = {
         'Content-Type' => 'application/x-www-form-urlencoded'
       }
@@ -46,10 +47,19 @@ module ET
     def send
       @system = ""
       yield @system
-			erb = ERB.new(File.open(File.join(File.dirname(__FILE__),"auth.rxml"),"r").read, 0, "<>")
-      result = 'qf=xml&xml=' + erb.result( binding )
+
+      result = 'qf=xml&xml=' + render_template( 'auth' )
 
       @url.post( @uri.path, result, @headers.merge('Content-length' => result.length.to_s) )
+    end
+
+    def template_path(name)
+      File.join(File.dirname(__FILE__),"#{name}.rxml")
+    end
+
+    def render_template( name )
+			erb = ERB.new( File.open( template_path(name) ,"r").read, 0, "<>")
+      erb.result( binding )
     end
 
   end
