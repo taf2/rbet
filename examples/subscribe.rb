@@ -2,7 +2,6 @@ require File.join(File.dirname(__FILE__),'help.rb')
 
 subscriber = ET::Subscriber.new($et_uri, $et_user, $et_pass, :debug_output => $stderr)
 
-subscriber.load!('afreeman@intelg.com')
 
 puts subscriber.inspect
 
