@@ -58,15 +58,66 @@ module ET
   #   => nil
   #
   class List < Client
+    attr_reader :attributes
 
-    def self.create( name, options = {} )
+    def initialize(service_url,username,password,options={})
+      super
+      @attributes = {}
+    end
+    
+    # get all the lists
+    def all
+      send do|io|
+        io << render_template('list_list_all')
+      end
     end
 
-    def self.retrieve( options = {} )
+    # returns a new list object by id
+    def retrieve_by_id( id )
+      @search_type = "listid"
+      @search_value = id
+      response = send do|io|
+        io << render_template('list_retrieve')
+      end
+      load_list( response )
     end
 
-    def edit( options = {} )
+    def retrieve_by_name( name )
+      @search_type = "listname"
+      @search_value = name
+      response = send do|io|
+        io << render_template('list_retrieve')
+      end
+      load_list( response )
     end
+    
+    def load_list( response )
+      Error.check_response_error(response)
+      doc = Hpricot.XML(response.read_body)
+      doc.at("list").each_child do|child|
+        if child.respond_to?(:name) and child.respond_to?(:inner_html)
+          @attributes[child.name] = child.inner_html
+        end
+      end
+      self
+    end
+    private :load_list
+    
+
+    # defaults type to private if not private or public
+    # returns the new list id
+    def add(name, type='private')
+      @list_name = name
+      @list_type = type
+      @list_type = 'private' if type != 'public' or type != 'private'
+      response = send do|io|
+        io << render_template('list_add')
+      end
+      Error.check_response_error(response)
+      doc = Hpricot.XML( response.read_body )
+      doc.at("list_description").inner_html.to_i
+    end
+
 
   end
 end

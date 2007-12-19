@@ -1,18 +1,8 @@
-$:.unshift File.join(File.dirname(__FILE__), "..", "lib")
-require 'et'
+require File.join(File.dirname(__FILE__),'help.rb')
 
-user = ENV['ET_USER']
-pass = ENV['ET_PASS']
-EXACTTARGET_URI="https://www.exacttarget.com/api/integrate.asp?qf=xml"
+subscriber = ET::Subscriber.new($et_uri, $et_user, $et_pass, :debug_output => $stderr)
 
-if !user or !pass
-  STDERR.puts "You must set the environment variables ET_USER and ET_PASS. e.g. export ET_USER='tester'; export ET_PASS='ssshh'"
-  exit(1)
-end
-
-subscriber = ET::Subscriber.new(EXACTTARGET_URI, user, pass,:debug_output => $stderr)
-
-subscriber.load!('user@example.com')
+subscriber.load!('afreeman@intelg.com')
 
 puts subscriber.inspect
 
