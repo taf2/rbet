@@ -67,9 +67,16 @@ module ET
     
     # get all the lists
     def all
-      send do|io|
+      response = send do|io|
         io << render_template('list_list_all')
       end
+      Error.check_response_error(response)
+      doc = Hpricot.XML( response.read_body )
+      listids = []
+      (doc/"listid").each do|listid|
+        listids << listid.inner_html.to_i
+      end
+      listids
     end
 
     # returns a new list object by id
@@ -79,7 +86,8 @@ module ET
       response = send do|io|
         io << render_template('list_retrieve')
       end
-      load_list( response )
+      Error.check_response_error(response)
+      load_list( response.read_body )
     end
 
     def retrieve_by_name( name )
@@ -88,12 +96,12 @@ module ET
       response = send do|io|
         io << render_template('list_retrieve')
       end
-      load_list( response )
-    end
-    
-    def load_list( response )
       Error.check_response_error(response)
-      doc = Hpricot.XML(response.read_body)
+      load_list( response.read_body )
+    end
+
+    def load_list( body )
+      doc = Hpricot.XML( body )
       doc.at("list").each_child do|child|
         if child.respond_to?(:name) and child.respond_to?(:inner_html)
           @attributes[child.name] = child.inner_html
@@ -102,7 +110,6 @@ module ET
       self
     end
     private :load_list
-    
 
     # defaults type to private if not private or public
     # returns the new list id
