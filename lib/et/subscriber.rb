@@ -61,38 +61,62 @@ module ET
       @attrs = {}
     end
 
+    def load_by_id(id)
+      @email = email
+      response = send do|io|
+        io << render_template('subscriber_retrieve')
+      end
+      Error.check_response_error(response)
+      load_response(response.read_body)
+      self
+    end
+
     def load!(email)
       @email = email
       response = send do|io|
         io << render_template('subscriber_retrieve')
       end
-      if response.class != Net::HTTPOK
-        # error?
-      else
-        doc = Hpricot.XML(response.body)
-        subscriber = doc.at(:subscriber)
-        # load elements into the attrs hash
-        @attrs = {}
-        subscriber.each_child do|attr_element|
-          if attr_element.elem?
-            name = attr_element.name.gsub(/__/,' ')
-            value = attr_element.inner_html
-            @attrs[name] = value
-            if name == 'Email Address'
-              @email = value
-            elsif name == 'Status'
-              @status = value
-            end
+      Error.check_response_error(response)
+      load_response(response.read_body)
+    end
+
+    def load_response(body)
+      doc = Hpricot.XML(body)
+      subscriber = doc.at(:subscriber)
+      # load elements into the attrs hash
+      @attrs = {}
+      subscriber.each_child do|attr_element|
+        if attr_element.elem?
+          name = attr_element.name.gsub(/__/,' ')
+          value = attr_element.inner_html
+          @attrs[name] = value
+          if name == 'Email Address'
+            @email = value
+          elsif name == 'Status'
+            @status = value
           end
         end
       end
     end
+    private :load_response
 
     # desc:
-    #   add this user as a new subscriber to the email, with a set of attributes
+    #   add this user as a new subscriber to the list, with a set of attributes
     # params:
-    #   emailid: id of the e-mail list to subscribe this user to 
-    def add(emailid,attributes ={})
+    #   listid: id of the e-mail list to subscribe this user to 
+    #   name: name of the subscriber
+    #   email: E-mail address of subscriber
+    def add( email, name, listid, attributes ={} )
+      @email = email
+      @subscriber_listid = listid
+      @name = name
+      @attributes = attributes
+      response = send do|io|
+        io << render_template('subscriber_add')
+      end
+      Error.check_response_error(response)
+      doc = Hpricot.XML(response.read_body)
+      doc.at("subscriber_description").inner_html.to_i
     end
 
     def save
