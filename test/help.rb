@@ -27,16 +27,31 @@ class ETService
 end
 
 class DiagnosticsService < ETService
-  def ping(*values)
+  def ping(params)
     render_template("diagnostics_ping_success")
+  end
+end
+
+class ListService < ETService
+  def add(params)
+    list_type = params['list_type']
+    if list_type != 'private' and list_type != 'public'
+      render_template("list_add_failure")
+    else
+      render_template("list_add_success")
+    end
+  end
+
+  def retrieve(params)
+    render_template("list_retrieve_all_success")
   end
 end
 
 class SubscriberService < ETService
 
-  def retrieve(*values)
-    if values.is_a?(Array)
-      @email = values[1]
+  def retrieve(params)
+    if params['search_value2']
+      @email = params['search_value2']
       render_template("subscriber_retrieve_success")
     else
       render_template("subscriber_retrieve_failed")
@@ -56,11 +71,15 @@ class SubscriberETService < ::WEBrick::HTTPServlet::AbstractServlet
     system = doc.at(:system)
     system_name = system.at(:system_name).inner_html.strip.downcase
     action = system.at(:action).inner_html.strip.downcase
- 
-    sv1 = system.at(:search_value).inner_html.strip unless system.at(:search_value).nil?
-    sv2 = system.at(:search_value2).inner_html.strip unless system.at(:search_value2).nil?
 
-    response = service_for(system_name).send(action, sv1, sv2)
+    params = {}
+    # load all the system parameters into a hash
+    system.each_child do|element|
+      next unless element.elem?
+      params[element.name] = element.inner_html.strip
+    end
+
+    response = service_for(system_name).send(action, params)
 
     res.body = %Q(<?xml version="1.0" ?>
 <exacttarget>

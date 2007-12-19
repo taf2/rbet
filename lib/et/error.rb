@@ -20,8 +20,25 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-require 'et/renderable'
-require 'et/error'
-require 'et/client'
-require 'et/subscriber'
-require 'et/list'
+module ET
+  class Error < RuntimeError
+    attr_reader :code, :message
+    def initialize(error_code,error_msg)
+      @code = error_code 
+      @message = error_msg
+    end
+
+    # raise a new error object from an HTTP response if it contains an error
+    def self.check_response_error(response)
+      if response.class != Net::HTTPOK
+        raise Error.new(-1,'Network error')
+      end
+      doc = Hpricot.XML(response.body)
+      error_code = doc.at("error")
+      error_msg = doc.at("error_description")
+      if( error_code and error_msg )
+        raise Error.new(error_code.inner_html.to_i,error_msg.inner_html)
+      end
+    end
+  end
+end
