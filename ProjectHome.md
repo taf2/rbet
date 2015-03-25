@@ -1,0 +1,1 @@
+When working on a project that uses Exact Target for newsletters this became useful.
